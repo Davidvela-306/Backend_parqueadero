@@ -7,7 +7,6 @@ import routerParqueaderos from "./routes/parqueadero_routes.js";
 import routerUsuarios from "./routes/usuario_routes.js";
 import routerGuardias from "./routes/guardia_routes.js";
 import routerAdministrador from "./routes/administrador_routes.js";
-// import { SerialPort, ReadlineParser } from "serialport";
 import swaggerUi from "swagger-ui-express";
 import swaggerJSDoc from "swagger-jsdoc";
 import { options } from "../src/swagger.js";
@@ -26,7 +25,19 @@ dotenv.config();
 // Configuraciones
 const PORT = process.env.PORT || 4000;
 app.set("port", PORT);
-app.use(cors());
+
+// CORS configurado específicamente
+app.use(
+  cors({
+    origin: ["https://timely-crepe-9d2886.netlify.app"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true, // Si se requiere el uso de cookies o autenticación
+  })
+);
+
+// Manejo de preflight (OPTIONS)
+app.options("*", cors());
 
 // Middlewares
 app.use(express.json());
@@ -41,30 +52,17 @@ app.use("/api", routerAdministrador);
 app.get("/", (req, res) => {
   res.send("Bienvenido al backend");
 });
+
 // Documentación
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(spect));
 
-// Endpoint no es encontrado
+// Endpoint no encontrado
 app.use((req, res) => res.status(404).send("Endpoint no encontrado - 404"));
 
-// PARTE IOT
-// const port = new SerialPort({
-//   path: "COM3",
-//   baudRate: 9600,
-// });
-
-// const parser = port.pipe(new ReadlineParser({ delimiter: "\r\n" }));
-// parser.on("data", function (data) {
-//   console.log(data);
-//   io.emit("serialData", data); // Emitir datos a todos los clientes conectados
-// });
-// parser.on("error", (err) => console.log(err));
-// // // Socket.IO
-// io.on("connection", (socket) => {
-//   console.log("Un cliente se ha conectado");
-//   socket.on("disconnect", () => {
-//     console.log("Un cliente se ha desconectado");
-//   });
-// });
+// Depuración de solicitudes (opcional, solo para pruebas)
+app.use((req, res, next) => {
+  console.log("Solicitud recibida:", req.method, req.path);
+  next();
+});
 
 export { httpServer, app };
